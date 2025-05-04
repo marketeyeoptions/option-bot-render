@@ -6,7 +6,7 @@ TELEGRAM_BOT_TOKEN = "7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4"
 TELEGRAM_CHAT_ID = "@marketeyeoptions"
 
 # إعدادات Polygon
-POLYGON_API_KEY = "BwlqC9PU9VxhHDympuBEb3_JLE4_FWIf"
+POLYGON_API_KEY = "BwIqC9PU9vXhHDympuBEb3_JLE4_FWIf"
 
 def fetch_option_price():
     url = url = f"https://api.polygon.io/v3/snapshot/options/NVDA?apiKey={POLYGON_API_KEY}"
