@@ -6,15 +6,15 @@ TELEGRAM_BOT_TOKEN = "7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4"
 TELEGRAM_CHAT_ID = "@marketeyeoptions"
 
 # إعدادات Polygon
-POLYGON_API_KEY = "BwIqC9PU9vXhHDympuBEb3_JLE4_FWIf"
+POLYGON_API_KEY = "BwlqC9PU9VxhHDympuBEb3_JLE4_FWIf"
 
 def fetch_option_price():
     url = f"https://api.polygon.io/v3/snapshot/options/NVDA250510C00115000?apiKey={POLYGON_API_KEY}"
-    response = requests.get(url) 
-     print(f"Status: {response.status_code}, Response: {response.text}")
+    response = requests.get(url)
+    print(f"Status: {response.status_code}, Response: {response.text}")
     if response.status_code == 200:
         data = response.json()
-        price = data.get("results", [{}])[0].get("lastQuote", {}).get("bid", "N/A")
+        price = data.get("results", {}).get("lastQuote", {}).get("bid", "N/A")
         return price
     else:
         return None
@@ -26,13 +26,14 @@ def send_telegram_message(message):
         "text": message
     }
     try:
-        requests.post(url, data=payload)
+        response = requests.post(url, data=payload)
+        print(f"Telegram response: {response.status_code}")
     except Exception as e:
         print(f"Telegram Error: {e}")
 
 def main():
     price = fetch_option_price()
-    if price is not None:
+    if price and price != "N/A":
         msg = f"[{datetime.now()}] NVDA Option Bid: {price}"
     else:
         msg = f"[{datetime.now()}] Failed to fetch option price."
