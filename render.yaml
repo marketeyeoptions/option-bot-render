@@ -3,6 +3,6 @@ services:
     name: option-bot-job
     schedule: "*/5 * * * *"
     runtime: python
-    plan: free
-    buildCommand: ""
+    plan: starter
+    buildCommand: "pip install -r requirements.txt"
     startCommand: "python main.py"
