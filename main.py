@@ -1,19 +1,19 @@
 import requests
 from datetime import datetime
 
-TELEGRAM_BOT_TOKEN = "7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4"
+TELEGRAM_BOT_TOKEN = "7613977084:AF-6aSy8X_YJcF_f8XY9PpaqE7AZiFUjI4"
 TELEGRAM_CHAT_ID = "@marketeyeoptions"
-POLYGON_API_KEY = "BwIqC9PU9vXhHDympuBEb3_JLE4_FWIf"
+POLYGON_API_KEY = "BwIqC9PU9vXhHDympuBEb3_JlLE4_FWlf"
 
 def fetch_option_price():
-    url = f"https://api.polygon.io/v3/reference/options/contracts/NVDA250509C00115000?apiKey={POLYGON_API_KEY}"
+    url = f"https://api.polygon.io/v3/snapshot/options/NVDA/NVDA250509C00115000?apiKey={POLYGON_API_KEY}"
     response = requests.get(url)
-
+    
     print(f"Status: {response.status_code}, Response: {response.text}")
     
     if response.status_code == 200:
         data = response.json()
-        price = data["results"]["price"]
+        price = data["results"]["last_quote"]["midpoint"]
         return price
     else:
         return None
@@ -29,14 +29,11 @@ def send_telegram_message(message):
     except Exception as e:
         print(f"Telegram Error: {e}")
 
-def main():
-    price = fetch_option_price()
-    if price is not None:
-        msg = f"[{datetime.now()}] NVDA Call 115 (2025-05-09) Bid: {price}"
-    else:
-        msg = f"[{datetime.now()}] Failed to fetch option price."
-    print(msg)
-    send_telegram_message(msg)
-
 if __name__ == "__main__":
-    main()
+    price = fetch_option_price()
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    if price:
+        msg = f"Option Contract Update:\nDate: {timestamp}\nPrice: {price}"
+    else:
+        msg = f"[{timestamp}] Failed to fetch option price."
+    send_telegram_message(msg)
