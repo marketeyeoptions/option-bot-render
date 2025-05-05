@@ -1,4 +1,4 @@
-equests
+import requests
 from datetime import datetime
 
 TELEGRAM_BOT_TOKEN = "7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4"
