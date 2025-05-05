@@ -3,50 +3,50 @@ import time
 import telegram
 
 # إعدادات
+symbol = "O:NVDA250516P00110000"
 api_key = "8X2aox8AI9r_jRp3t20tsFf56YW3pEy3"
-telegram_token = "7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4"
+bot_token = "7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4"
 chat_id = "@marketeyeoptions"
 
-# بيانات العقد
-option_contract = "O:NVDA250516P00110000"
+# الدالة الرئيسية
+def get_option_price():
+    url = f"https://api.polygon.io/v3/snapshot/options/{symbol}?apiKey={api_key}"
+    try:
+        response = requests.get(url)
+        if response.status_code != 200:
+            print("Price fetch error: Empty or invalid results")
+            return None
 
-# جلب بيانات العقد من Polygon
-contract_url = f"https://api.polygon.io/v3/reference/options/contracts/{option_contract}?apiKey={api_key}"
-contract_response = requests.get(contract_url)
+        data = response.json()
+        results = data.get("results", [])
+        if not results or not isinstance(results, list):
+            print("Price fetch error: No data")
+            return None
 
-if contract_response.status_code == 200:
-    contract_data = contract_response.json()
-    symbol = contract_data["results"]["underlying_ticker"]
-    strike = contract_data["results"]["strike_price"]
-    expiry = contract_data["results"]["expiration_date"]
-    option_type = contract_data["results"]["contract_type"].capitalize()
+        result = results[0]
+        ask = result.get("last_quote", {}).get("ask", "N/A")
+        bid = result.get("last_quote", {}).get("bid", "N/A")
 
-    # جلب snapshot للأسعار
-    snapshot_url = f"https://api.polygon.io/v3/snapshot/options/{option_contract}?apiKey={api_key}"
-    snapshot_response = requests.get(snapshot_url)
-    
-    print("Snapshot Raw Response:")
-    print(snapshot_response.text)  # <=== هذا يطبع النتيجة الخام لمراقبتها في Render
+        return ask, bid
 
-    if snapshot_response.status_code == 200:
-        snapshot_data = snapshot_response.json()
-        results = snapshot_data.get("results")
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
 
-        if results:
-            ask = results.get("ask", {}).get("price", "N/A")
-            bid = results.get("bid", {}).get("price", "N/A")
-            message = f"""عقد NVDA 110 Put
-العرض: {bid}
-الطلب: {ask}
-الانتهاء: {expiry}
+# إرسال البيانات إلى تيليجرام
+def send_to_telegram():
+    price = get_option_price()
+    if price:
+        ask, bid = price
+        message = f"""عقد NVDA 110 Put  
+العرض: {bid}  
+الطلب: {ask}  
 #عين_السوق"""
-        else:
-            message = f"فشل في جلب سعر عرض وطلب العقد:\n{option_contract}\n(النتائج فارغة)"
     else:
-        message = f"فشل في جلب بيانات العقد:\n{option_contract}\n(status code {snapshot_response.status_code})"
-else:
-    message = f"فشل في جلب بيانات العقد:\n{option_contract}\n(status code {contract_response.status_code})"
+        message = f"فشل في جلب سعر عرض وطلب العقد:\n{symbol}\n(النتائج فارغة)"
 
-# إرسال النتيجة إلى تليجرام
-bot = telegram.Bot(token=telegram_token)
-bot.send_message(chat_id=chat_id, text=message)
+    bot = telegram.Bot(token=bot_token)
+    bot.send_message(chat_id=chat_id, text=message)
+
+# تشغيل البوت
+send_to_telegram()
