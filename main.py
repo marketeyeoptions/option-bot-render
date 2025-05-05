@@ -1,11 +1,12 @@
-import requests
+equests
+from datetime import datetime
 
 TELEGRAM_BOT_TOKEN = "7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4"
 TELEGRAM_CHAT_ID = "@marketeyeoptions"
 POLYGON_API_KEY = "BwIqC9PU9vXhHDympuBEb3_JLE4_FWIf"
 
 def fetch_stock_price():
-    url = f"https://api.polygon.io/v2/last/trade/AAPL?apiKey={POLYGON_API_KEY}"
+    url = f"https://api.polygon.io/v2/last/trade/NVDA?apiKey={POLYGON_API_KEY}"
     response = requests.get(url)
     print(f"Status: {response.status_code}, Response: {response.text}")
 
@@ -31,6 +32,6 @@ def send_telegram_message(message):
 if __name__ == "__main__":
     price = fetch_stock_price()
     if price:
-        send_telegram_message(f"سعر AAPL الآن: {price}")
+        send_telegram_message(f"سعر NVDA الآن: {price}")
     else:
-        send_telegram_message("فشل في جلب سعر AAPL.")
+        send_telegram_message("فشل في جلب سعر NVDA.")
