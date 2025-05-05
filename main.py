@@ -5,15 +5,21 @@ TELEGRAM_BOT_TOKEN = "7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4"
 TELEGRAM_CHAT_ID = "@marketeyeoptions"
 POLYGON_API_KEY = "BwIqC9PU9vXhHDympuBEb3_JLE4_FWIf"
 
-def fetch_closing_price():
-    url = f"https://api.polygon.io/v2/aggs/ticker/NVDA/prev?adjusted=true&apiKey={POLYGON_API_KEY}"
+# رمز عقد NVDA Call 115 - ينتهي 10 مايو 2025
+OPTION_CONTRACT = "NVDA250510C00115000"
+
+def fetch_option_price():
+    url = f"https://api.polygon.io/v3/reference/options/contracts/{OPTION_CONTRACT}?apiKey={POLYGON_API_KEY}"
     response = requests.get(url)
     print(f"Status: {response.status_code}, Response: {response.text}")
 
     if response.status_code == 200:
         data = response.json()
-        price = data["results"][0]["c"]  # c = close price
-        return price
+        try:
+            price = data["results"]["last_price"]
+            return price
+        except:
+            return None
     else:
         return None
 
@@ -29,8 +35,8 @@ def send_telegram_message(message):
         print(f"Telegram Error: {e}")
 
 if __name__ == "__main__":
-    price = fetch_closing_price()
+    price = fetch_option_price()
     if price:
-        send_telegram_message(f"سعر إغلاق NVDA الأخير: ${price}")
+        send_telegram_message(f"سعر عقد NVDA 115 Call: ${price}")
     else:
-        send_telegram_message("فشل في جلب سعر NVDA.")
+        send_telegram_message("فشل في جلب سعر عقد NVDA 115 Call.")
