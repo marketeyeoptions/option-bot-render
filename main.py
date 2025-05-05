@@ -1,36 +1,33 @@
 import requests
+from telegram import Bot
 
-# إعدادات
-bot_token = "7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4"
-chat_id = "@marketeyeoptions"
-polygon_api_key = "Bw1qC9PU9vXhHDympuBEb3_JLE4_FWlF"
+# إعدادات التيليجرام
+TELEGRAM_TOKEN = '7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4'
+CHAT_ID = '@marketeyeoptions'
+bot = Bot(token=TELEGRAM_TOKEN)
 
 # بيانات العقد
-option_ticker = "O:NVDA250516P00110000"
+option_contract = 'O:NVDA250516P00110000'  # NVDA Put 110 - Exp: 2025-05-16
+api_key = 'Bw1qC9P9UvXhHDympuBEb3_JLE4_FW1F'
+url = f'https://api.polygon.io/v3/trades/options/{option_contract}?apiKey={api_key}'
 
-# رابط API لجلب بيانات العقد
-url = f"https://api.polygon.io/v3/snapshot/options/{option_ticker}?apiKey={polygon_api_key}"
+# طلب البيانات
+response = requests.get(url)
+data = response.json()
 
 try:
-    response = requests.get(url)
-    data = response.json()
+    trade = data['results'][0]
+    price = trade['price']
+    size = trade['size']
+    timestamp = trade['sip_timestamp']
 
-    if "results" in data and data["results"]:
-        option_data = data["results"]
-
-        last_price = option_data["last_quote"]["p"] if "last_quote" in option_data else "N/A"
-        bid = option_data["last_quote"]["bid"]
-        ask = option_data["last_quote"]["ask"]
-
-        message = f"سعر العقد الآن: {last_price}\nالعرض: {bid}\nالطلب: {ask}"
-    else:
-        message = f"فشل في جلب بيانات العقد {option_ticker}"
-
+    message = f"""سعر عقد الأوبشن:
+العقد: {option_contract}
+السعر: {price}$
+الكمية: {size}
+"""
 except Exception as e:
-    message = f"حدث خطأ: {str(e)}"
+    message = f'فشل في جلب السعر: {str(e)}'
 
-# إرسال إلى تيليجرام
-requests.post(
-    f"https://api.telegram.org/bot{bot_token}/sendMessage",
-    data={"chat_id": chat_id, "text": message}
-)
+# إرسال النتيجة إلى تيليجرام
+bot.send_message(chat_id=CHAT_ID, text=message)
