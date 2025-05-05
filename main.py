@@ -4,17 +4,17 @@ TELEGRAM_BOT_TOKEN = "7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4"
 TELEGRAM_CHAT_ID = "@marketeyeoptions"
 POLYGON_API_KEY = "BwIqC9PU9vXhHDympuBEb3_JLE4_FWIf"
 
-OPTION_CONTRACT = "O:NVDA250516P00110000"  # عقد بوت NVDA سترايك 110 ينتهي 16 مايو
+OPTION_CONTRACT = "O:NVDA250516P00110000"
 
 def get_option_price(ticker):
     url = f"https://api.polygon.io/v3/snapshot/options/{ticker}?apiKey={POLYGON_API_KEY}"
     r = requests.get(url)
     if r.status_code == 200:
         data = r.json()
-        results = data.get("results", {})
-        if isinstance(results, dict):  # الشكل المتوقع من API
+        results = data.get("results", [])
+        if isinstance(results, dict):
             quote = results.get("last_quote", {})
-        elif isinstance(results, list) and len(results) > 0:  # احتياطي في حال رجع list
+        elif isinstance(results, list) and len(results) > 0:
             quote = results[0].get("last_quote", {})
         else:
             return None, None
