@@ -5,10 +5,10 @@ TELEGRAM_BOT_TOKEN = "7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4"
 TELEGRAM_CHAT_ID = "@marketeyeoptions"
 POLYGON_API_KEY = "BwIqC9PU9vXhHDympuBEb3_JLE4_FWIf"
 
-OPTION_TICKER = "O:NVDA250509C00115000"  # عقد كول NVDA 115 انتهاء 2025-05-09
+OPTION_TICKER = "O:NVDA250509C00115000"
 
 def fetch_option_bid_ask():
-    url = f"https://api.polygon.io/v3/quotes/{OPTION_TICKER}/last?apiKey={POLYGON_API_KEY}"
+    url = f"https://api.polygon.io/v3/quotes/options/{OPTION_TICKER}/last?apiKey={POLYGON_API_KEY}"
     response = requests.get(url)
     print(f"Status: {response.status_code}, Response: {response.text}")
 
