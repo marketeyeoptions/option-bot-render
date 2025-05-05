@@ -3,38 +3,20 @@ import requests
 TELEGRAM_BOT_TOKEN = "7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4"
 TELEGRAM_CHAT_ID = "@marketeyeoptions"
 POLYGON_API_KEY = "BwIqC9PU9vXhHDympuBEb3_JLE4_FWIf"
+OPTION_CONTRACT = "O:NVDA250516P00110000"  # عقد بوت NVDA سترايك 110، انتهاء 16 مايو
 
-def get_contract_ticker():
-    url = "https://api.polygon.io/v3/reference/options/contracts"
-    params = {
-        "underlying_ticker": "NVDA",
-        "contract_type": "put",
-        "expiration_date": "2025-05-16",
-        "strike_price": "110",
-        "limit": "1",
-        "apiKey": POLYGON_API_KEY
-    }
-    response = requests.get(url, params=params)
-    try:
-        ticker = response.json()["results"][0]["ticker"]
-        return ticker
-    except Exception as e:
-        print(f"Contract fetch error: {e}")
-        return None
-
-def get_option_price(ticker):
-    url = f"https://api.polygon.io/v3/snapshot/options/{ticker}?apiKey={POLYGON_API_KEY}"
+def fetch_option_bid_ask():
+    url = f"https://api.polygon.io/v3/snapshot/options/{OPTION_CONTRACT}?apiKey={POLYGON_API_KEY}"
     response = requests.get(url)
-    try:
+    if response.status_code == 200:
         data = response.json()
-        result = data.get("results", [])
-        quote = result[0].get("last_quote", {}) if result else {}
-        bid = quote.get("bid")
-        ask = quote.get("ask")
-        return bid, ask
-    except Exception as e:
-        print(f"Price fetch error: {e}")
-        return None, None
+        results = data.get("results")
+        if isinstance(results, dict):
+            quote = results.get("last_quote", {})
+            bid = quote.get("bid")
+            ask = quote.get("ask")
+            return bid, ask
+    return None, None
 
 def send_telegram_message(message):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
@@ -45,12 +27,8 @@ def send_telegram_message(message):
         print(f"Telegram Error: {e}")
 
 if __name__ == "__main__":
-    ticker = get_contract_ticker()
-    if ticker:
-        bid, ask = get_option_price(ticker)
-        if bid is not None and ask is not None:
-            send_telegram_message(f"سعر عرض وطلب عقد NVDA 110 Put:\nالعرض: {bid}\nالطلب: {ask}")
-        else:
-            send_telegram_message(f"فشل في جلب سعر عرض وطلب العقد:\n{ticker}")
+    bid, ask = fetch_option_bid_ask()
+    if bid is not None and ask is not None:
+        send_telegram_message(f"سعر عرض وطلب عقد NVDA 110 Put:\nالعرض: {bid}\nالطلب: {ask}")
     else:
-        send_telegram_message("فشل في جلب بيانات العقد.")
+        send_telegram_message(f"فشل في جلب سعر عرض وطلب للعقد:\n{OPTION_CONTRACT}")
