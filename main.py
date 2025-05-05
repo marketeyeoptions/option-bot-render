@@ -27,8 +27,8 @@ def get_option_price(ticker):
     response = requests.get(url)
     try:
         data = response.json()
-        result = data.get("results", {})
-        quote = result.get("last_quote", {})
+        result = data.get("results", [])
+        quote = result[0].get("last_quote", {}) if result else {}
         bid = quote.get("bid")
         ask = quote.get("ask")
         return bid, ask
