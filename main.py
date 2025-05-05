@@ -13,8 +13,8 @@ def fetch_option_bid_ask():
 
     if response.status_code == 200:
         data = response.json()
-        results = data.get("results")
-        if results and isinstance(results, dict):
+        results = data.get("results", {})
+        if results:
             quote = results.get("last_quote", {})
             bid = quote.get("bid")
             ask = quote.get("ask")
