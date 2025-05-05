@@ -13,11 +13,13 @@ def fetch_option_bid_ask():
 
     if response.status_code == 200:
         data = response.json()
-        if "results" in data and isinstance(data["results"], dict):
-            last_quote = data["results"].get("last_quote", {})
-            bid = last_quote.get("bid")
-            ask = last_quote.get("ask")
-            return bid, ask
+        results = data.get("results")
+        if results and isinstance(results, dict):
+            quote = results.get("last_quote", {})
+            bid = quote.get("bid")
+            ask = quote.get("ask")
+            if bid is not None and ask is not None:
+                return bid, ask
     return None, None
 
 def send_telegram_message(message):
