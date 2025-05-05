@@ -4,19 +4,25 @@ TELEGRAM_BOT_TOKEN = "7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4"
 TELEGRAM_CHAT_ID = "@marketeyeoptions"
 POLYGON_API_KEY = "BwIqC9PU9vXhHDympuBEb3_JLE4_FWIf"
 
-OPTION_TICKER = "O:NVDA250509C00115000"
+# رمز العقد الصحيح بصيغة Polygon.io
+OPTION_CONTRACT_TICKER = "O:NVDA250509C00115000"
 
-def fetch_option_price():
-    url = f"https://api.polygon.io/v3/trades/options/{OPTION_TICKER}/last?apiKey={POLYGON_API_KEY}"
+def fetch_option_bid_ask():
+    url = f"https://api.polygon.io/v3/snapshot/options/{OPTION_CONTRACT_TICKER}?apiKey={POLYGON_API_KEY}"
     response = requests.get(url)
     print(f"Status: {response.status_code}, Response: {response.text}")
-    
+
     if response.status_code == 200:
         data = response.json()
-        last_price = data.get("results", {}).get("price")
-        return last_price
+        try:
+            bid = data["results"]["last_quote"]["bid"]
+            ask = data["results"]["last_quote"]["ask"]
+            return bid, ask
+        except Exception as e:
+            print("Error parsing bid/ask:", e)
+            return None, None
     else:
-        return None
+        return None, None
 
 def send_telegram_message(message):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
@@ -30,8 +36,9 @@ def send_telegram_message(message):
         print(f"Telegram Error: {e}")
 
 if __name__ == "__main__":
-    price = fetch_option_price()
-    if price is not None:
-        send_telegram_message(f"السعر الأخير لعقد NVDA 115 Call هو: ${price}")
+    bid, ask = fetch_option_bid_ask()
+    if bid is not None and ask is not None:
+        message = f"NVDA 115 Call\nالعرض: ${bid}\nالطلب: ${ask}"
+        send_telegram_message(message)
     else:
-        send_telegram_message("فشل في جلب السعر الأخير لعقد NVDA 115.")
+        send_telegram_message("فشل في جلب سعر عرض وطلب عقد NVDA 115.")
