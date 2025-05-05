@@ -1,38 +1,28 @@
 import requests
+from datetime import datetime
+from telegram import Bot
 
-TELEGRAM_BOT_TOKEN = "7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4"
-TELEGRAM_CHAT_ID = "@marketeyeoptions"
-POLYGON_API_KEY = "BwIqC9PU9vXhHDympuBEb3_JLE4_FWIf"
+# إعدادات البوت وتيليجرام
+bot_token = "7094699436:AAF4x_wX7opS6dUeH6B9G4pAwNPH7eP7Vbc"
+chat_id = "@marketeyeoptions"
 
-OPTION_CONTRACT = "O:NVDA250509C00115000"  # عقد كول NVDA سترايك 115 ينتهي 9 مايو
+# إعدادات العقد وPolygon
+api_key = "Bw1qC9P9UvXhHDympuBEb3_JLE4_FW1F"
+contract_symbol = "O:NVDA250516P00110000"
+url = f"https://api.polygon.io/v3/snapshot/options/{contract_symbol}?apiKey={api_key}"
 
-def fetch_option_bid_ask():
-    url = f"https://api.polygon.io/v3/snapshot/options/{OPTION_CONTRACT}?apiKey={POLYGON_API_KEY}"
-    response = requests.get(url)
-    print(f"Status: {response.status_code}, Response: {response.text}")
+# جلب السعر الأخير للعقد
+try:
+    res = requests.get(url)
+    data = res.json()
 
-    if response.status_code == 200:
-        data = response.json()
-        results = data.get("results")
-        if results and isinstance(results, dict):
-            quote = results.get("last_quote", {})
-            bid = quote.get("bid")
-            ask = quote.get("ask")
-            if bid is not None and ask is not None:
-                return bid, ask
-    return None, None
+    last_price = data["results"]["last_quote"]["last"]["p"]
+    time_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-def send_telegram_message(message):
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    payload = {"chat_id": TELEGRAM_CHAT_ID, "text": message}
-    try:
-        requests.post(url, data=payload)
-    except Exception as e:
-        print(f"Telegram Error: {e}")
+    message = f"سعر NVDA 110 Put:\n{last_price} دولار\nالتوقيت: {time_now}"
+except Exception as e:
+    message = f"فشل في جلب السعر للعقد NVDA 110 Put\n{str(e)}"
 
-if __name__ == "__main__":
-    bid, ask = fetch_option_bid_ask()
-    if bid is not None and ask is not None:
-        send_telegram_message(f"سعر عرض وطلب عقد NVDA 115 Call:\nالعرض: {bid}\nالطلب: {ask}")
-    else:
-        send_telegram_message("فشل في جلب سعر عرض وطلب عقد NVDA 115.")
+# إرسال إلى تيليجرام
+bot = Bot(token=bot_token)
+bot.send_message(chat_id=chat_id, text=message)
