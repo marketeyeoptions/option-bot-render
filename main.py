@@ -1,33 +1,38 @@
 import requests
-from telegram import Bot
 
-# إعدادات التيليجرام
-TELEGRAM_TOKEN = '7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4'
-CHAT_ID = '@marketeyeoptions'
-bot = Bot(token=TELEGRAM_TOKEN)
+TELEGRAM_BOT_TOKEN = "7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4"
+TELEGRAM_CHAT_ID = "@marketeyeoptions"
+POLYGON_API_KEY = "BwIqC9PU9vXhHDympuBEb3_JLE4_FWIf"
 
-# بيانات العقد
-option_contract = 'O:NVDA250516P00110000'  # NVDA Put 110 - Exp: 2025-05-16
-api_key = 'Bw1qC9P9UvXhHDympuBEb3_JLE4_FW1F'
-url = f'https://api.polygon.io/v3/trades/options/{option_contract}?apiKey={api_key}'
+OPTION_CONTRACT = "O:NVDA250509C00115000"  # عقد كول NVDA سترايك 115 ينتهي 9 مايو
 
-# طلب البيانات
-response = requests.get(url)
-data = response.json()
+def fetch_option_bid_ask():
+    url = f"https://api.polygon.io/v3/snapshot/options/{OPTION_CONTRACT}?apiKey={POLYGON_API_KEY}"
+    response = requests.get(url)
+    print(f"Status: {response.status_code}, Response: {response.text}")
 
-try:
-    trade = data['results'][0]
-    price = trade['price']
-    size = trade['size']
-    timestamp = trade['sip_timestamp']
+    if response.status_code == 200:
+        data = response.json()
+        results = data.get("results")
+        if results and isinstance(results, dict):
+            quote = results.get("last_quote", {})
+            bid = quote.get("bid")
+            ask = quote.get("ask")
+            if bid is not None and ask is not None:
+                return bid, ask
+    return None, None
 
-    message = f"""سعر عقد الأوبشن:
-العقد: {option_contract}
-السعر: {price}$
-الكمية: {size}
-"""
-except Exception as e:
-    message = f'فشل في جلب السعر: {str(e)}'
+def send_telegram_message(message):
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    payload = {"chat_id": TELEGRAM_CHAT_ID, "text": message}
+    try:
+        requests.post(url, data=payload)
+    except Exception as e:
+        print(f"Telegram Error: {e}")
 
-# إرسال النتيجة إلى تيليجرام
-bot.send_message(chat_id=CHAT_ID, text=message)
+if __name__ == "__main__":
+    bid, ask = fetch_option_bid_ask()
+    if bid is not None and ask is not None:
+        send_telegram_message(f"سعر عرض وطلب عقد NVDA 115 Call:\nالعرض: {bid}\nالطلب: {ask}")
+    else:
+        send_telegram_message("فشل في جلب سعر عرض وطلب عقد NVDA 115.")
