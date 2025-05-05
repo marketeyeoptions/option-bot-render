@@ -1,41 +1,33 @@
 import requests
 import telegram
 
-# إعدادات الاتصال
-API_KEY = "8X2aox8AI9r_jRp3t20tsFf56YW3pEy3"
-BOT_TOKEN = "7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4"
-CHANNEL_ID = "@marketeyeoptions"
+# إعدادات ثابتة
+API_KEY = '8X2aox8AI9r_jRp3t20tsFf56YW3pEy3'
+BOT_TOKEN = '7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4'
+CHAT_ID = '@marketeyeoptions'
+OPTION_CONTRACT = 'O:NVDA250516P00110000'
 
-# بيانات العقد المطلوب
-TICKER = "O:NVDA250516P00110000"
-UNDERLYING = "NVDA"
+# الاتصال بـ Polygon API
+url = f'https://api.polygon.io/v3/snapshot/options/{OPTION_CONTRACT}?apiKey={API_KEY}'
+response = requests.get(url)
+data = response.json()
 
-# إعداد بوت تيليجرام
+# معالجة البيانات
+try:
+    option_data = data['results']
+    ask = option_data['details']['ask']
+    bid = option_data['details']['bid']
+    last = option_data['details']['last']
+
+    message = f"""عقد NVDA 110 Put  
+العرض: {ask}  
+الطلب: {bid}  
+آخر سعر: {last}  
+#عين_السوق"""
+
+except Exception as e:
+    message = f"فشل في جلب سعر عرض وطلب العقد:\n{OPTION_CONTRACT}\nخطأ داخلي: {e}"
+
+# إرسال النتيجة إلى تليجرام
 bot = telegram.Bot(token=BOT_TOKEN)
-
-def get_option_price():
-    url = f"https://api.polygon.io/v3/snapshot/options/{UNDERLYING}/{TICKER}?apiKey={API_KEY}"
-    response = requests.get(url)
-    print(f"Status: {response.status_code}")
-    data = response.json()
-
-    results = data.get("results")
-    if results and isinstance(results, dict):
-        quote = results.get("last_quote", {})
-        bid = quote.get("bid", "N/A")
-        ask = quote.get("ask", "N/A")
-        return bid, ask
-    else:
-        print("Price fetch error: results is empty or invalid.")
-        return None, None
-
-def send_to_telegram(bid, ask):
-    message = f"عقد NVDA 110 Put\nالعرض: {bid}\nالطلب: {ask}\n#عين_السوق"
-    bot.send_message(chat_id=CHANNEL_ID, text=message)
-
-if __name__ == "__main__":
-    bid, ask = get_option_price()
-    if bid is not None and ask is not None:
-        send_to_telegram(bid, ask)
-    else:
-        bot.send_message(chat_id=CHANNEL_ID, text="فشل في جلب سعر عرض وطلب عقد NVDA 110.")
+bot.send_message(chat_id=CHAT_ID, text=message)
