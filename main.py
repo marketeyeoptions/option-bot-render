@@ -6,7 +6,7 @@ TELEGRAM_CHAT_ID = "@marketeyeoptions"
 POLYGON_API_KEY = "BwIqC9PU9vXhHDympuBEb3_JLE4_FWIf"
 
 def fetch_option_price():
-    url = f"https://api.polygon.io/v3/snapshot/options/A:NVDA250510C00115000?apiKey={POLYGON_API_KEY}"
+    url = f"https://api.polygon.io/v3/snapshot/options/A:NVDA250509C00115000?apiKey={POLYGON_API_KEY}"
     response = requests.get(url)
     print(f"Status: {response.status_code}, Response: {response.text}")
 
