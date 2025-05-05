@@ -4,7 +4,6 @@ TELEGRAM_BOT_TOKEN = "7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4"
 TELEGRAM_CHAT_ID = "@marketeyeoptions"
 POLYGON_API_KEY = "BwIqC9PU9vXhHDympuBEb3_JLE4_FWIf"
 
-# رمز العقد الصحيح بصيغة Polygon.io
 OPTION_CONTRACT_TICKER = "O:NVDA250509C00115000"
 
 def fetch_option_bid_ask():
@@ -15,8 +14,9 @@ def fetch_option_bid_ask():
     if response.status_code == 200:
         data = response.json()
         try:
-            bid = data["results"]["last_quote"]["bid"]
-            ask = data["results"]["last_quote"]["ask"]
+            last_quote = data["results"][0]["last_quote"]
+            bid = last_quote["bid"]
+            ask = last_quote["ask"]
             return bid, ask
         except Exception as e:
             print("Error parsing bid/ask:", e)
