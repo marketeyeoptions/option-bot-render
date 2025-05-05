@@ -1,39 +1,41 @@
 import requests
 import telegram
 
-# إعدادات
-polygon_api_key = "8X2aox8AI9r_jRp3t20tsFf56YW3pEy3"
-telegram_token = "7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4"
+# بيانات العقد
+contract_id = "O:NVDA250516P00110000"
+api_key = "8X2aox8AI9r_jRp3t20tsFf56YW3pEy3"
+bot_token = "7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4"
 chat_id = "@marketeyeoptions"
-option_id = "O:NVDA250516P00110000"
 
-# رابط API
-url = f"https://api.polygon.io/v3/reference/options/contracts/{option_id}?apiKey={polygon_api_key}"
+# إرسال الرسالة
+def send_to_telegram(message):
+    bot = telegram.Bot(token=bot_token)
+    bot.send_message(chat_id=chat_id, text=message)
 
+# طلب البيانات من Polygon.io
 try:
+    url = f"https://api.polygon.io/v3/snapshot/options/{contract_id}?apiKey={api_key}"
     response = requests.get(url)
     data = response.json()
 
-    contract = data.get("results", {})
-    if not contract:
-        raise ValueError("العقد غير موجود أو لا يحتوي بيانات")
+    results = data.get("results", [])
+    if isinstance(results, list) and len(results) > 0:
+        option_data = results[0]
+        ask = option_data.get("ask", "N/A")
+        bid = option_data.get("bid", "N/A")
+        greeks = option_data.get("greeks", {})
+        delta = greeks.get("delta", "N/A")
+        expiry = option_data.get("details", {}).get("expiration_date", "N/A")
 
-    strike_price = contract.get("strike_price", "N/A")
-    expiration_date = contract.get("expiration_date", "N/A")
-    contract_type = contract.get("contract_type", "N/A")
-    ticker = contract.get("ticker", "N/A")
-
-    message = (
-        f"{ticker} عقد\n"
-        f"النوع: {'Put' if contract_type == 'put' else 'Call'}\n"
-        f"السترايك: {strike_price}\n"
-        f"الانتهاء: {expiration_date}\n"
-        f"#عين_السوق"
-    )
+        message = f"""NVDA 110 Put عقد
+العرض: {bid}
+الطلب: {ask}
+الانتهاء: {expiry}
+#عين_السوق"""
+    else:
+        message = f"فشل في جلب سعر عرض وطلب العقد:\n{contract_id}\n(النتائج فارغة)"
 
 except Exception as e:
-    message = f"فشل في جلب بيانات العقد:\n{option_id}\nخطأ داخلي: {e}"
+    message = f"فشل في جلب بيانات العقد:\n{contract_id}\nخطأ داخلي: {e}"
 
-# إرسال إلى تيليجرام
-bot = telegram.Bot(token=telegram_token)
-bot.send_message(chat_id=chat_id, text=message)
+send_to_telegram(message)
