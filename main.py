@@ -8,7 +8,7 @@ POLYGON_API_KEY = "BwIqC9PU9vXhHDympuBEb3_JLE4_FWIf"
 OPTION_CONTRACT = "O:NVDA250516P00110000"
 
 def fetch_option_bid_ask():
-    url = f"https://api.polygon.io/v3/snapshot/options/{OPTION_CONTRACT}?apiKey={POLYGON_API_KEY}"
+    url = f"https://api.polygon.io/v3/reference/options/contracts?underlying_ticker=NVDA&contract_type=put&expiration_date=2025-05-16&strike_price=110&order=asc&limit=10&sort=ticker&apiKey=BwIqC9PU9vXhHDympuBEb3_JLE4_FWIf"
     response = requests.get(url)
     print(f"Status: {response.status_code}, Response: {response.text}")
 
