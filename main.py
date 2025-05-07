@@ -1,46 +1,50 @@
 import requests
+import json
 from telegram import Bot
 
-# بيانات الاتصال
-BOT_TOKEN = "7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4"
-CHAT_ID = "@marketeyeoptions"
-API_KEY = "8X2aox8AI9r_jRp3t20tsFf56YW3pEy3"
+# مفاتيح الوصول
+api_key = "8X2aox8AI9r_jRp3t20tsFf56YW3pEy3"
+bot_token = "7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4"
+chat_id = "@marketeyeoptions"
 
-# رمز العقد (يبدأ بـ O:)
-contract = "O:NVDA250516P00110000"
+# بيانات العقد
+option_contract = "O:NVDA250516P00110000"
+url = f"https://api.polygon.io/v3/snapshot/options/{option_contract}?apiKey={api_key}"
 
-# رابط الاستعلام من Polygon
-url = f"https://api.polygon.io/v3/reference/options/contracts/{contract}?apiKey={API_KEY}"
+# إرسال رسالة تيليجرام
+def send_telegram_message(message):
+    bot = Bot(token=bot_token)
+    bot.send_message(chat_id=chat_id, text=message)
 
-# تنفيذ الطلب
+# جلب البيانات
 try:
     response = requests.get(url)
-    response.raise_for_status()
     data = response.json()
 
-    # التعامل مع النتائج
-    result = data.get("results", {})
+    results = data.get("results")
+    if results:
+        details = results.get("details", {})
+        greeks = results.get("greeks", {})
 
-    symbol = result.get("ticker", "N/A")
-    underlying = result.get("underlying_ticker", "N/A")
-    contract_type = result.get("contract_type", "N/A").capitalize()
-    strike_price = result.get("strike_price", "N/A")
-    expiration_date = result.get("expiration_date", "N/A")
+        price = results.get("last_quote", {}).get("ask", "N/A")
+        volume = results.get("day", {}).get("volume", "N/A")
+        open_interest = details.get("open_interest", "N/A")
 
-    # تجهيز الرسالة
-    message = f"""تحديث عقد أوبشن:
-السهم: {underlying}
-النوع: {contract_type}
-السترايك: {strike_price}
-الانتهاء: {expiration_date}
-السعر: N/A (متأخر ١٥ د)
-الحجم: N/A
-الرمز: {symbol}
-#marketeye"""
+        message = (
+            f"تحديث عقد أوبشن:\n"
+            f"السهم: NVDA\n"
+            f"النوع: Put\n"
+            f"السترايك: 110\n"
+            f"الانتهاء: 16-05-2025\n"
+            f"السعر (متأخر ١٥ د): {price}\n"
+            f"الحجم: {volume}\n"
+            f"الرمز: {option_contract}\n"
+            f"#marketeye"
+        )
+    else:
+        message = f"لم يتم العثور على بيانات للعقد:\n{option_contract}"
 
 except Exception as e:
-    message = f"خطأ أثناء جلب البيانات:\n{e}"
+    message = f"خطأ أثناء جلب البيانات:\n{str(e)}"
 
-# إرسال النتيجة إلى تيليجرام
-bot = Bot(token=BOT_TOKEN)
-bot.send_message(chat_id=CHAT_ID, text=message)
+send_telegram_message(message)
