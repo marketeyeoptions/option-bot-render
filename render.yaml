@@ -1,8 +1,13 @@
 services:
-  - type: cron
-    name: option-bot-job
-    schedule: "*/5 * * * *"
-    runtime: python
+  - type: web
+    name: option-bot-render
+    env: python
     plan: starter
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "python main.py"
+    buildCommand: |
+      apt-get update && \
+      apt-get install -y tesseract-ocr && \
+      pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10
