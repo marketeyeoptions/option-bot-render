@@ -11,19 +11,20 @@ url = f"https://api.polygon.io/v3/snapshot/options/{OPTION_CONTRACT}?apiKey={POL
 response = requests.get(url)
 data = response.json()
 
-# محاولة استخراج البيانات
+# محاولة استخراج البيانات بأمان
 try:
-    last_price = data['results']['last_quote']['last']
-    bid = data['results']['last_quote']['bid']
-    ask = data['results']['last_quote']['ask']
-    expiry = data['results']['details']['expiration_date']
-    strike = data['results']['details']['strike_price']
+    quote = data['results']['last_quote']
+    details = data['results']['details']
+
+    last_price = quote.get('last') or "غير متوفر"
+    bid = quote.get('bid') or "غير متوفر"
+    ask = quote.get('ask') or "غير متوفر"
+    strike = details.get('strike_price') or "غير متوفر"
+    expiry = details.get('expiration_date') or "غير متوفر"
+    volume = details.get('volume') or "غير متوفر"
+    oi = details.get('open_interest') or "غير متوفر"
 except:
-    last_price = "N/A"
-    bid = "N/A"
-    ask = "N/A"
-    expiry = "N/A"
-    strike = "N/A"
+    last_price = bid = ask = strike = expiry = volume = oi = "غير متوفر"
 
 # إعداد نص الرسالة
 message = f"""
@@ -34,6 +35,8 @@ message = f"""
 السعر الحالي: {last_price}  
 العرض (Bid): {bid}  
 الطلب (Ask): {ask}  
+الحجم (Volume): {volume}  
+Open Interest: {oi}  
 #عين_السوق
 """
 
