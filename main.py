@@ -1,50 +1,45 @@
 import requests
-import json
-from telegram import Bot
+import telegram
+from datetime import datetime
 
-# مفاتيح الوصول
-api_key = "8X2aox8AI9r_jRp3t20tsFf56YW3pEy3"
-bot_token = "7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4"
-chat_id = "@marketeyeoptions"
+# إعدادات الاتصال
+TOKEN = "7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4"
+CHAT_ID = "@marketeyeoptions"
+API_KEY = "8X2aox8AI9r_jRp3t20tsFf56YW3pEy3"
 
-# بيانات العقد
-option_contract = "O:NVDA250516P00110000"
-url = f"https://api.polygon.io/v3/snapshot/options/{option_contract}?apiKey={api_key}"
+# معلومات العقد
+contract_symbol = "O:NVDA250516P00110000"
 
-# إرسال رسالة تيليجرام
-def send_telegram_message(message):
-    bot = Bot(token=bot_token)
-    bot.send_message(chat_id=chat_id, text=message)
+# رابط API من Polygon
+url = f"https://api.polygon.io/v3/snapshot/options/{contract_symbol}?apiKey={API_KEY}"
 
-# جلب البيانات
-try:
-    response = requests.get(url)
-    data = response.json()
+# تنفيذ الطلب
+response = requests.get(url)
+data = response.json()
 
-    results = data.get("results")
-    if results:
-        details = results.get("details", {})
-        greeks = results.get("greeks", {})
+# استخراج البيانات
+results = data.get("results")
+if results and isinstance(results, dict):
+    last_quote = results.get("last_quote", {})
+    price = last_quote.get("mid_price", "N/A")
+    volume = results.get("volume", "N/A")
+    oi = results.get("open_interest", "N/A")
 
-        price = results.get("last_quote", {}).get("ask", "N/A")
-        volume = results.get("day", {}).get("volume", "N/A")
-        open_interest = details.get("open_interest", "N/A")
+    # تجهيز الرسالة
+    message = f"""تحديث عقد أوبشن:
+السهم: NVDA
+النوع: Put
+السعر: 110
+الانتهاء: 16-05-2025
+السعر (متأخر 15 د): {price}
+الحجم: {volume}
+الرغبة: {oi}
+الرمز: {contract_symbol}
 
-        message = (
-            f"تحديث عقد أوبشن:\n"
-            f"السهم: NVDA\n"
-            f"النوع: Put\n"
-            f"السترايك: 110\n"
-            f"الانتهاء: 16-05-2025\n"
-            f"السعر (متأخر ١٥ د): {price}\n"
-            f"الحجم: {volume}\n"
-            f"الرمز: {option_contract}\n"
-            f"#marketeye"
-        )
-    else:
-        message = f"لم يتم العثور على بيانات للعقد:\n{option_contract}"
+#marketeye"""
+else:
+    message = f"لم يتم العثور على بيانات للعقد:\n{contract_symbol}"
 
-except Exception as e:
-    message = f"خطأ أثناء جلب البيانات:\n{str(e)}"
-
-send_telegram_message(message)
+# إرسال الرسالة
+bot = telegram.Bot(token=TOKEN)
+bot.send_message(chat_id=CHAT_ID, text=message)
