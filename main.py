@@ -6,29 +6,38 @@ CHANNEL_ID = "@marketeyeoptions"
 POLYGON_API_KEY = "8X2aox8AI9r_jRp3t20tsFf56YW3pEy3"
 OPTION_CONTRACT = "O:NVDA250516P00110000"
 
-# استدعاء بيانات السعر من Polygon
-polygon_url = f"https://api.polygon.io/v3/snapshot/options/{OPTION_CONTRACT}?apiKey={POLYGON_API_KEY}"
-response = requests.get(polygon_url)
+# استدعاء بيانات العقد من Polygon
+url = f"https://api.polygon.io/v3/snapshot/options/{OPTION_CONTRACT}?apiKey={POLYGON_API_KEY}"
+response = requests.get(url)
 data = response.json()
 
-# استخراج السعر الحالي
+# محاولة استخراج البيانات
 try:
-    current_price = data['results']['last_quote']['ask'] or data['results']['last_quote']['bid']
-except Exception:
-    current_price = "N/A"
+    last_price = data['results']['last_quote']['last']
+    bid = data['results']['last_quote']['bid']
+    ask = data['results']['last_quote']['ask']
+    expiry = data['results']['details']['expiration_date']
+    strike = data['results']['details']['strike_price']
+except:
+    last_price = "N/A"
+    bid = "N/A"
+    ask = "N/A"
+    expiry = "N/A"
+    strike = "N/A"
 
-# نص الرسالة مع السعر
+# إعداد نص الرسالة
 message = f"""
 توصية جديدة:  
-السهم: NVDA  
-النوع: Put  
-الاسترايك: 110  
-الانتهاء: 2025-05-16  
-السعر الحالي: {current_price}  
+العقد: {OPTION_CONTRACT}  
+الاسترايك: {strike}  
+الانتهاء: {expiry}  
+السعر الحالي: {last_price}  
+العرض (Bid): {bid}  
+الطلب (Ask): {ask}  
 #عين_السوق
 """
 
-# إرسال الرسالة إلى تيليجرام
+# إرسال الرسالة
 telegram_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 requests.post(telegram_url, data={
     "chat_id": CHANNEL_ID,
