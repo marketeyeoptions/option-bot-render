@@ -1,55 +1,46 @@
 import requests
 from telegram import Bot
 
-# إعدادات تيليجرام
-TELEGRAM_TOKEN = '7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4'
-TELEGRAM_CHAT_ID = '@marketeyeoptions'
+# بيانات الاتصال
+BOT_TOKEN = "7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4"
+CHAT_ID = "@marketeyeoptions"
+API_KEY = "8X2aox8AI9r_jRp3t20tsFf56YW3pEy3"
 
-# إعدادات العقد من Polygon
-POLYGON_API_KEY = '8X2aox8AI9r_jRp3t20tsFf56YW3pEy3'
-OPTION_CONTRACT = 'O:NVDA250516P00110000'
-POLYGON_URL = f'https://api.polygon.io/v3/snapshot/options/{OPTION_CONTRACT}?apiKey={POLYGON_API_KEY}'
+# رمز العقد (يبدأ بـ O:)
+contract = "O:NVDA250516P00110000"
 
-# إرسال الرسالة إلى تليجرام
-def send_telegram_message(message):
-    bot = Bot(token=TELEGRAM_TOKEN)
-    bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
+# رابط الاستعلام من Polygon
+url = f"https://api.polygon.io/v3/reference/options/contracts/{contract}?apiKey={API_KEY}"
 
-# جلب البيانات من Polygon
-def fetch_option_data():
-    try:
-        response = requests.get(POLYGON_URL)
-        if response.status_code != 200:
-            send_telegram_message(f"رد الخادم: {response.status_code} page not found")
-            return
+# تنفيذ الطلب
+try:
+    response = requests.get(url)
+    response.raise_for_status()
+    data = response.json()
 
-        data = response.json()
+    # التعامل مع النتائج
+    result = data.get("results", {})
 
-        option = data.get("results", {})
-        last_quote = option.get("last_quote", {})
-        greeks = option.get("greeks", {})
+    symbol = result.get("ticker", "N/A")
+    underlying = result.get("underlying_ticker", "N/A")
+    contract_type = result.get("contract_type", "N/A").capitalize()
+    strike_price = result.get("strike_price", "N/A")
+    expiration_date = result.get("expiration_date", "N/A")
 
-        price = last_quote.get("ask", "N/A")
-        volume = option.get("day", {}).get("volume", "N/A")
-        open_interest = option.get("open_interest", "N/A")
-        iv = greeks.get("iv", "N/A")
+    # تجهيز الرسالة
+    message = f"""تحديث عقد أوبشن:
+السهم: {underlying}
+النوع: {contract_type}
+السترايك: {strike_price}
+الانتهاء: {expiration_date}
+السعر: N/A (متأخر ١٥ د)
+الحجم: N/A
+الرمز: {symbol}
+#marketeye"""
 
-        msg = (
-            "تحديث عقد أوبشن NVDA:\n"
-            f"النوع: Put\n"
-            f"السترايك: 110\n"
-            f"الانتهاء: 2025-05-16\n"
-            f"السعر (متأخر 15 د): {price}\n"
-            f"الحجم: {volume}\n"
-            f"الاهتمام المفتوح: {open_interest}\n"
-            f"الض隐 الضمني (IV): {iv}\n"
-            "#marketeye"
-        )
+except Exception as e:
+    message = f"خطأ أثناء جلب البيانات:\n{e}"
 
-        send_telegram_message(msg)
-
-    except Exception as e:
-        send_telegram_message(f"خطأ أثناء جلب البيانات:\n{str(e)}")
-
-# تنفيذ الكود
-fetch_option_data()
+# إرسال النتيجة إلى تيليجرام
+bot = Bot(token=BOT_TOKEN)
+bot.send_message(chat_id=CHAT_ID, text=message)
