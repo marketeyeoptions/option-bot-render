@@ -1,20 +1,23 @@
+# كود 2 - بدون صورة
 import requests
 from datetime import datetime
 
-# بيانات التوكن والقناة
+# بيانات البوت و القناة
 BOT_TOKEN = "7710712900:AAH8WFVY9GzhCjisF8CihBxW0onfLBN9LZQ"
 CHANNEL_ID = "@marketeyeoptions"
 
-# نص الرسالة
-message = f"""توصية جديدة:
+# نص التوصية
+message = f"""
+توصية جديدة
 السهم: NVDA
 النوع: Put
-السترايك: 110
-الانتهاء: 2025-05-16
+السعر: 110
+الانتهاء: 16-05-2025
 التاريخ: {datetime.now().strftime('%Y-%m-%d %H:%M')}
-#عين_السوق"""
+#عين_السوق
+"""
 
-# رابط API للإرسال
+# رابط API
 url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
 # البيانات المطلوبة
@@ -23,9 +26,9 @@ data = {
     "text": message
 }
 
-# تنفيذ الطلب
+# إرسال الرسالة
 response = requests.post(url, data=data)
 
-# عرض النتيجة
+# طباعة النتيجة
 print("Status:", response.status_code)
 print("Response:", response.text)
