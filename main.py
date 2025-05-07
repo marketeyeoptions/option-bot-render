@@ -7,7 +7,7 @@ TELEGRAM_CHANNEL_ID = '@marketeyeoptions'
 POLYGON_API_KEY = '8X2aox8AI9r_jRp3t20tsFf56YW3pEy3'
 
 ticker = "NVDA"
-target_contract = "NVDA250516P00110000"
+target_contract = "NVDA250516P00110000"  # بالعقد الصحيح بصفر
 
 polygon_url = f"https://api.polygon.io/v3/snapshot/options/{ticker}?apiKey={POLYGON_API_KEY}"
 
@@ -18,9 +18,8 @@ def fetch_snapshot_price():
 
         options = data.get("results", [])
         if not isinstance(options, list):
-            return "خطأ: لم يتم العثور على بيانات الخيارات."
+            return "خطأ: البيانات المستلمة ليست قائمة خيارات."
 
-        # ابحث عن العقد داخل القائمة
         contract_data = next((item for item in options if item.get("details", {}).get("symbol") == target_contract), None)
 
         if not contract_data:
