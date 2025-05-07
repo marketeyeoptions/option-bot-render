@@ -1,4 +1,5 @@
 import requests
+import json
 from telegram import Bot
 
 # إعدادات
@@ -13,7 +14,10 @@ polygon_url = f"https://api.polygon.io/v3/quotes/options/{option_contract}/last?
 def fetch_option_price():
     try:
         response = requests.get(polygon_url)
-        data = response.json()
+        try:
+            data = json.loads(response.text.strip().split('\n')[0])  # نتأكد من أول JSON فقط
+        except Exception as parse_error:
+            return f"خطأ أثناء قراءة JSON:\n{parse_error}"
 
         results = data.get("results")
         if not results:
@@ -23,7 +27,6 @@ def fetch_option_price():
         bid = last.get("bid", "N/A")
         ask = last.get("ask", "N/A")
         price = last.get("price", "N/A")
-        timestamp = results.get("sip_timestamp", "N/A")
 
         message = f"""تحديث عقد أوبشن NVDA:
 النوع: Put
