@@ -1,11 +1,31 @@
-from telegram import Bot
+import requests
+from datetime import datetime
 
-TOKEN = "7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4"
-CHAT_ID = "@marketeyeoptions"
-image_path = "nvda_put_110.png"
+# بيانات التوكن والقناة
+BOT_TOKEN = "7710712900:AAH8WFVY9GzhCjisF8CihBxW0onfLBN9LZQ"
+CHANNEL_ID = "@marketeyeoptions"
 
-caption = "NVDA Put 110 – Exp: 2025-05-16\nPrice: 1.96 | Vol: 3.71k | OI: 2.23k | IV: 25%\n#marketeye"
+# نص الرسالة
+message = f"""توصية جديدة:
+السهم: NVDA
+النوع: Put
+السترايك: 110
+الانتهاء: 2025-05-16
+التاريخ: {datetime.now().strftime('%Y-%m-%d %H:%M')}
+#عين_السوق"""
 
-bot = Bot(token=TOKEN)
-with open(image_path, 'rb') as img:
-    bot.send_photo(chat_id=CHAT_ID, photo=img, caption=caption)
+# رابط API للإرسال
+url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+
+# البيانات المطلوبة
+data = {
+    "chat_id": CHANNEL_ID,
+    "text": message
+}
+
+# تنفيذ الطلب
+response = requests.post(url, data=data)
+
+# عرض النتيجة
+print("Status:", response.status_code)
+print("Response:", response.text)
