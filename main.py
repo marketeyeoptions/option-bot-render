@@ -6,37 +6,55 @@ TELEGRAM_BOT_TOKEN = '7613977084:AAF-65aYBx_YJcF_f8Xf9PaaqE7AZ1FUjI4'
 TELEGRAM_CHANNEL_ID = '@marketeyeoptions'
 POLYGON_API_KEY = '8X2aox8AI9r_jRp3t20tsFf56YW3pEy3'
 
-# عقد بوت NVDA – Strike 110 – Expiry 2025-05-16
-option_contract = "O:NVDA250516P00110000"
-polygon_url = f"https://api.polygon.io/v2/last/trade/{option_contract}?apiKey={POLYGON_API_KEY}"
+# إعداد عقد الأوبشن
+ticker = "NVDA"
+target_contract = "NVDA250516P00110000"  # بدون 'O:' لأن snapshot يرجع الرموز هكذا
 
-def fetch_option_price():
+# رابط Snapshot
+polygon_url = f"https://api.polygon.io/v3/snapshot/options/{ticker}?apiKey={POLYGON_API_KEY}"
+
+def fetch_snapshot_price():
     try:
         response = requests.get(polygon_url)
         data = response.json()
 
         results = data.get("results", {})
-        price = results.get("price", "N/A")
-        exchange = results.get("exchange", "N/A")
-        size = results.get("size", "N/A")
-        timestamp = results.get("sip_timestamp", "N/A")
+        options = results.get("options", [])
 
-        message = f"""تحديث عقد أوبشن NVDA:
+        # ابحث عن العقد المستهدف
+        contract_data = next((item for item in options if item.get("details", {}).get("symbol") == target_contract), None)
+
+        if not contract_data:
+            return f"لم يتم العثور على العقد:\n{target_contract}"
+
+        details = contract_data.get("details", {})
+        last_quote = contract_data.get("last_quote", {})
+        greeks = contract_data.get("greeks", {})
+
+        price = last_quote.get("midpoint", "N/A")
+        bid = last_quote.get("bid", "N/A")
+        ask = last_quote.get("ask", "N/A")
+        delta = greeks.get("delta", "N/A")
+        oi = contract_data.get("open_interest", "N/A")
+
+        message = f"""تحديث عقد NVDA:
 النوع: Put
 السترايك: 110
 الانتهاء: 2025-05-16
-السعر (متأخر 15 د): {price}
-الحجم: {size}
-البورصة: {exchange}
+السعر (منتصف العرض/الطلب): {price}
+العرض: {bid} | الطلب: {ask}
+الـ Delta: {delta}
+Open Interest: {oi}
 
 #marketeye"""
         return message
+
     except Exception as e:
-        return f"خطأ أثناء جلب السعر:\n{e}"
+        return f"خطأ أثناء جلب البيانات:\n{e}"
 
 def main():
     bot = Bot(token=TELEGRAM_BOT_TOKEN)
-    message = fetch_option_price()
+    message = fetch_snapshot_price()
     bot.send_message(chat_id=TELEGRAM_CHANNEL_ID, text=message)
 
 if __name__ == "__main__":
