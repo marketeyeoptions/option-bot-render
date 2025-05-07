@@ -19,22 +19,29 @@ def fetch_option_price():
         response = requests.get(polygon_url)
         data = response.json()
 
-        option_data = data.get("results", {})
-        strike_price = option_data.get("strike_price")
-        expiration_date = option_data.get("expiration_date")
-        option_type = option_data.get("contract_type")
-        last_price = option_data.get("last_updated", "N/A")
+        results = data.get("results", {})
+        if isinstance(results, list) and results:
+            option_data = results[0]
+        elif isinstance(results, dict):
+            option_data = results
+        else:
+            return f"فشل في جلب سعر عرض وطلب العقد:\n{option_contract}\n(النتائج غير متوفرة)", None
+
+        strike_price = option_data.get("strike_price", "N/A")
+        expiration_date = option_data.get("expiration_date", "N/A")
+        option_type = option_data.get("contract_type", "N/A")
+        last_price_value = option_data.get("last_price", "N/A")
 
         message = f"""تحديث عقد أوبشن NVDA:
 النوع: Put
 السترايك: {strike_price}
 الانتهاء: {expiration_date}
-السعر: {option_data.get('last_price', 'N/A')}
+السعر: {last_price_value}
 
 #marketeye"""
-        return message, option_data.get("last_price")
+        return message, last_price_value
     except Exception as e:
-        return f"خطأ أثناء جلب البيانات: {e}", None
+        return f"خطأ أثناء جلب البيانات:\n{e}", None
 
 def main():
     global last_price
@@ -46,8 +53,10 @@ def main():
         if current_price and current_price != last_price:
             bot.send_message(chat_id=TELEGRAM_CHANNEL_ID, text=message)
             last_price = current_price
+        elif current_price is None:
+            bot.send_message(chat_id=TELEGRAM_CHANNEL_ID, text=message)
 
-        time.sleep(300)  # كل 5 دقائق
+        time.sleep(300)
 
 if __name__ == "__main__":
     main()
