@@ -1,13 +1,6 @@
 services:
   - type: web
     name: option-bot-render
-    env: python
+    env: docker
     plan: starter
-    buildCommand: |
-      apt-get update && \
-      apt-get install -y tesseract-ocr && \
-      pip install -r requirements.txt
-    startCommand: python main.py
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.10
+    dockerfilePath: ./Dockerfile
