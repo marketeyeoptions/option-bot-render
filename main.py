@@ -7,7 +7,7 @@ import pytesseract
 from io import BytesIO
 
 # إعداد البوت
-BOT_TOKEN = "7710712900:AAH8WFVY9GzhCjisF8cihBxW0nFLBN9LZQ"
+BOT_TOKEN = "7710712900:AAHsi2QIbcawAma1bQZb5DBB5Fu86Il_Pdw"
 CHANNEL_ID = "@marketeyeoptions"
 
 logging.basicConfig(level=logging.INFO)
